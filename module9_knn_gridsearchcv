@@ -1,0 +1,84 @@
+import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
+
+
+def get_positive_int(message):
+    while True:
+        try:
+            value = int(input(message))
+            if value > 0:
+                return value
+            print("Please enter a positive integer.")
+        except ValueError:
+            print("Please enter a valid integer.")
+
+
+def get_float(message):
+    while True:
+        try:
+            return float(input(message))
+        except ValueError:
+            print("Please enter a valid real number.")
+
+
+def get_non_negative_int(message):
+    while True:
+        try:
+            value = int(input(message))
+            if value >= 0:
+                return value
+            print("Please enter a non-negative integer.")
+        except ValueError:
+            print("Please enter a valid integer.")
+
+
+def read_pairs(count, set_name):
+    print(f"\nEnter {count} (x, y) pairs for the {set_name} set.")
+
+    x_data = np.zeros((count, 1), dtype=float)
+    y_data = np.zeros(count, dtype=int)
+
+    for i in range(count):
+        x_val = get_float(f"{set_name} pair {i + 1} - x: ")
+        y_val = get_non_negative_int(f"{set_name} pair {i + 1} - y: ")
+
+        x_data[i] = x_val
+        y_data[i] = y_val
+
+    return x_data, y_data
+
+
+def main():
+    print("Mini kNN Classifier with Hyperparameter Search")
+
+    # Read training set
+    n = get_positive_int("Enter N (number of training pairs): ")
+    X_train, y_train = read_pairs(n, "training")
+
+    # Read test set
+    m = get_positive_int("\nEnter M (number of test pairs): ")
+    X_test, y_test = read_pairs(m, "test")
+
+    # k values to test
+    max_k = min(10, len(X_train))
+    param_grid = {"n_neighbors": list(range(1, max_k + 1))}
+
+    # Build model
+    knn = KNeighborsClassifier()
+
+    # Grid search
+    grid = GridSearchCV(knn, param_grid=param_grid, cv=2)
+    grid.fit(X_train, y_train)
+
+    # Best model and test accuracy
+    best_k = grid.best_params_["n_neighbors"]
+    best_model = grid.best_estimator_
+    test_accuracy = best_model.score(X_test, y_test)
+
+    print("\nBest k:", best_k)
+    print("Test accuracy:", test_accuracy)
+
+
+if __name__ == "__main__":
+    main()
